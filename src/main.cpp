@@ -1,12 +1,11 @@
-#include "modbus/LRC.hpp"
+#include "modbus/Frame.hpp"
 
 #include <iostream>
 
 int main(){
     std::cout << "modbus\n";
 
-    std::cout << std::hex << std::uppercase << static_cast<int>(computeLRC({0x01, 0x01, 0x00, 0x0A})) << std::endl;
-    std::cout << std::hex << std::uppercase << static_cast<int>(computeLRC({})) << std::endl;
+    std::cout << buildFrame(0x01, 0x01, {0x00, 0x0A});
 
     return 0;
 }

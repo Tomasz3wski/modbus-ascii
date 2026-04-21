@@ -1,6 +1,5 @@
 #include "LRC.hpp"
 
-#include <iostream>
 #include <vector>
 
 uint8_t computeLRC(const std::vector<uint8_t>& data){
