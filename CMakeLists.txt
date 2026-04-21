@@ -4,4 +4,5 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 project(modbus-ascii)
 
 add_executable(modbus-ascii
-    src/main.cpp)   
+    src/main.cpp
+    src/modbus/LRC.cpp)   
