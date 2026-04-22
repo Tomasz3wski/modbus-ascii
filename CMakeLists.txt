@@ -6,4 +6,5 @@ project(modbus-ascii)
 add_executable(modbus-ascii
     src/main.cpp
     src/modbus/LRC.cpp
-    src/modbus/Frame.cpp)   
+    src/modbus/Frame.cpp
+    src/serial/SerialPort.cpp)   
