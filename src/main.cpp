@@ -1,8 +1,11 @@
 #include "modbus/Frame.hpp"
 #include "serial/SerialPort.hpp"
 #include "modbus/Master.hpp"
+#include "modbus/Slave.hpp"
 
 #include <iostream>
+#include <thread>
+#include <chrono>
 
 int main(){
     SerialPort masterPort;
@@ -16,14 +19,23 @@ int main(){
         return 1;
     }
 
-    Master master(masterPort);
-    master.setRetryCount(2);
-    master.setTransactionTimeout(1000);
+    Slave slave(slavePort);
 
-    ParsedFrame response = master.sendTransaction(0x01, 0x01, {0x00, 0x0A});
+    std::thread sender([&](){
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        masterPort.write(":0101000AF4\r\n");
+    });
 
-    std::cout << "valid: " << response.valid << '\n';
+    std::cout << "Slave wait...\n";
+    ParsedFrame request = slave.receiveRequest();
 
+    std::cout << "valid:    " << request.valid << '\n';
+    if (request.valid){
+        std::cout << "address:  " << std::hex << static_cast<int>(request.address) << '\n';
+        std::cout << "function: " << std::hex << static_cast<int>(request.function) << '\n';
+    }
+
+    sender.join();
 
     return 0;
 }
