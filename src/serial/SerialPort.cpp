@@ -61,3 +61,37 @@ bool SerialPort::isOpen() const{
     }
     return true;
 }
+
+bool SerialPort::write(const std::string& data){
+    if (!isOpen()) return false;
+    
+    ssize_t result = ::write(fd, data.c_str(), data.size());
+    if(result == -1){
+        std::cerr << "SerialPort: write failed - " << strerror(errno) << '\n';
+        return false;
+    }
+    return true;
+}
+
+std::string SerialPort::read(size_t maxBytes, int timeoutMs){
+    if (!isOpen()) return "";
+
+    struct timeval tv;
+    tv.tv_sec = timeoutMs / 1000;
+    tv.tv_usec = (timeoutMs % 1000) * 1000;
+
+    fd_set readfds;
+    FD_ZERO(&readfds);
+    FD_SET(fd, &readfds);
+
+    int result = select(fd + 1, &readfds, nullptr, nullptr, &tv);
+    if (result <= 0) return "";
+
+    std::vector<char> buf(maxBytes);
+    ssize_t bytesRead = ::read(fd, buf.data(), maxBytes);
+    if (bytesRead == -1){
+        std::cerr << "SerialPort: read failed - " << strerror(errno) << '\n';
+        return "";
+    }
+    return std::string(buf.data(), bytesRead);
+}

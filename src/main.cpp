@@ -2,17 +2,23 @@
 #include "serial/SerialPort.hpp"
 
 #include <iostream>
-#include <iomanip>
 
 int main(){
-    std::cout << "test\n";
+    SerialPort writer;
+    SerialPort reader;
 
-    SerialPort port;
+    writer.open("/dev/ttys002", 9600);
+    reader.open("/dev/ttys003", 9600);
 
-    port.open("tty/razdwa", 9600);
-    if (port.isOpen()){
-        std::cout << "OPEN\n";
+    if (!writer.isOpen() || !reader.isOpen()){
+        std::cerr << "error\n";
+        return 1;
     }
+
+    writer.write("message 123456\n");
+
+    std::string received = reader.read(256, 1000);
+    std::cout << "received: " << received << '\n';
 
     return 0;
 }
