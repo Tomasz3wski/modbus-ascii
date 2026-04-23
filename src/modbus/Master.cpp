@@ -2,6 +2,7 @@
 #include "../serial/SerialPort.hpp"
 #include "Frame.hpp"
 
+#include <iostream>
 #include <vector>
 #include <string>
 #include <chrono>
@@ -31,6 +32,32 @@ ParsedFrame Master::receiveResponse(){
         if (ch.back() == '\n') break;
     }
     return parseFrame(rawResult);
+}
+
+ParsedFrame Master::sendTransaction(uint8_t address, uint8_t function, const std::vector<uint8_t>& data){
+    ParsedFrame response;
+    response.valid = false;
+
+    for (int i = 0; i <= getRetryCount(); i++){
+        sendFrame(address, function, data);
+
+        if (address == 0x00){
+            response.valid = true;
+            return response;
+        }
+        response = receiveResponse();
+
+        if (response.valid){
+            return response;
+        }
+
+        if (i < retryCount){
+            std::cerr << "Transaction attempt " << i+1 << '/' << retryCount+1 << " failed, retrying..\n";
+        } else {
+            std::cerr << "Transaction failed after " << retryCount+1 << " attempts.\n";
+        }
+    }
+    return response;
 }
 
 void Master::setTransactionTimeout(int ms){

@@ -17,18 +17,13 @@ int main(){
     }
 
     Master master(masterPort);
-    master.sendFrame(0x01, 0x01, {0x00, 0x0A});
+    master.setRetryCount(2);
+    master.setTransactionTimeout(1000);
 
-    std::string request = slavePort.read(256, 1000);
-    std::cout << "Slave odebral: " << request << '\n';
-    slavePort.write(":0101000AF4\r\n");
+    ParsedFrame response = master.sendTransaction(0x01, 0x01, {0x00, 0x0A});
 
-    ParsedFrame response = master.receiveResponse();
-    std::cout << "valid:    " << response.valid << '\n';
-    if (response.valid){
-        std::cout << "address:  " << std::hex << static_cast<int>(response.address) << '\n';
-        std::cout << "function: " << std::hex << static_cast<int>(response.function) << '\n';
-    }
+    std::cout << "valid: " << response.valid << '\n';
+
 
     return 0;
 }
