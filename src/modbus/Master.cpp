@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <string>
+#include <chrono>
 
 Master::Master(SerialPort& port) : transactionTimeout(1000), retryCount(3), interCharTimeout(100), mPort(port) {}
 
@@ -12,6 +13,24 @@ bool Master::sendFrame(uint8_t address, uint8_t function, const std::vector<uint
 
     std::string frame = buildFrame(address, function, data);
     return mPort.write(frame);
+}
+
+ParsedFrame Master::receiveResponse(){
+    std::string rawResult = "";
+    auto transactionStart = std::chrono::steady_clock::now();
+    
+    while(true){
+        auto elapsed = std::chrono::steady_clock::now() - transactionStart;
+        int elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
+        if (elapsedMs > transactionTimeout) break;
+
+        std::string ch = mPort.read(1, interCharTimeout);
+        if (ch.empty()) break;
+
+        rawResult += ch;
+        if (ch.back() == '\n') break;
+    }
+    return parseFrame(rawResult);
 }
 
 void Master::setTransactionTimeout(int ms){

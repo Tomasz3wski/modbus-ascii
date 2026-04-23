@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../serial/SerialPort.hpp"
+#include "Frame.hpp"
 
 #include <vector>
 
@@ -9,6 +10,7 @@ public:
     Master(SerialPort& port);
 
     bool sendFrame(uint8_t address, uint8_t function, const std::vector<uint8_t>& data);
+    ParsedFrame receiveResponse();
 
     void setTransactionTimeout(int ms); // 0 - 10000 ms, step 100ms
     void setRetryCount(int count); // 0 - 5
