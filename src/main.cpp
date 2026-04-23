@@ -1,5 +1,6 @@
 #include "modbus/Frame.hpp"
 #include "serial/SerialPort.hpp"
+#include "modbus/Master.hpp"
 
 #include <iostream>
 
@@ -15,7 +16,8 @@ int main(){
         return 1;
     }
 
-    writer.write("message 123456\n");
+    Master master(writer);
+    master.sendFrame(0x01, 0x01, {0x00, 0x0A});
 
     std::string received = reader.read(256, 1000);
     std::cout << "received: " << received << '\n';

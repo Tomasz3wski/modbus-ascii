@@ -1,6 +1,18 @@
 #include "Master.hpp"
+#include "../serial/SerialPort.hpp"
+#include "Frame.hpp"
 
-Master::Master() : transactionTimeout(1000), retryCount(3), interCharTimeout(100) {}
+#include <vector>
+#include <string>
+
+Master::Master(SerialPort& port) : transactionTimeout(1000), retryCount(3), interCharTimeout(100), mPort(port) {}
+
+bool Master::sendFrame(uint8_t address, uint8_t function, const std::vector<uint8_t>& data){
+    if (!mPort.isOpen()) return false;
+
+    std::string frame = buildFrame(address, function, data);
+    return mPort.write(frame);
+}
 
 void Master::setTransactionTimeout(int ms){
     if (ms <= 0) transactionTimeout = 0;
