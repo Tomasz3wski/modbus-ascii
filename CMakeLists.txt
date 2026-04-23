@@ -8,5 +8,6 @@ add_executable(modbus-ascii
     src/modbus/LRC.cpp
     src/modbus/Frame.cpp
     src/modbus/Master.cpp
+    src/modbus/Slave.cpp
     src/serial/SerialPort.cpp
     )   
