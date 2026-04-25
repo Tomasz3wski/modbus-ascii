@@ -84,8 +84,12 @@ static void drawMaster(const MasterState& state){
     printw("Address:  %02X\n", state.address);
     printw("Function: %s\n", state.function == 0x01 ? "1 - Write Text" : "2 - Read Text");
     printw("Text:     %s\n\n", state.text.c_str());
-    printw("[a] Set address  [f] Set function  [t] Set text\n");
-    printw("[s] Send         [q] Quit\n");
+    printw("Timeout:    %d ms\n", state.transactionTimeout);
+    printw("Retries:    %d\n", state.retryCount);
+    printw("Inter-char: %d ms\n\n", state.interCharTimeout);
+    printw("[a] Address  [f] Function  [t] Text\n");
+    printw("[o] Timeout  [r] Retries   [i] Inter-char\n");
+    printw("[s] Send     [q] Quit\n");
     printw("\n--- Log ---\n");
 
     int start = std::max(0, (int)state.log.size() - 5);
@@ -154,8 +158,54 @@ void runMaster(Master& master){
                 state.log.push_back("RX: timeout / no response");
             }
         }
-    }
 
+        if (ch == 'o'){
+            printw("\nEnter transaction timeout (0-10000 ms): ");
+            refresh();
+            echo();
+            char buf[8];
+            getnstr(buf, 7);
+            noecho();
+            try {
+                state.transactionTimeout = std::stoi(buf);
+                master.setTransactionTimeout(state.transactionTimeout);
+                state.transactionTimeout = master.getTransactionTimeout();
+            } catch (...) {
+                state.log.push_back("Invalid timeout input");
+            }
+        }
+
+        if (ch == 'r'){
+            printw("\nEnter retry count (0-5): ");
+            refresh();
+            echo();
+            char buf[4];
+            getnstr(buf, 3);
+            noecho();
+            try {
+                master.setRetryCount(std::stoi(buf));
+                state.retryCount = master.getRetryCount();
+            } catch (...) {
+                state.log.push_back("Invalid retry count input");
+            }
+        }
+
+        if (ch == 'i'){
+            printw("\nEnter inter-char timeout (0-1000 ms): ");
+            refresh();
+            echo();
+            char buf[8];
+            getnstr(buf, 7);
+            noecho();
+            try {
+                master.setInterCharTimeout(std::stoi(buf));
+                state.interCharTimeout = master.getInterCharTimeout();
+            } catch (...) {
+                state.log.push_back("Invalid inter-char timeout input");
+            }
+        }
+    }
+    
     endwin();
 }
 

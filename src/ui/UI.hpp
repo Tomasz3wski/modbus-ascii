@@ -13,12 +13,14 @@ struct Config {
     int baudRate;
 };
 
-
 struct MasterState {
     uint8_t address = 0x01;
     uint8_t function = 0x01;
     std::string text = "";
     std::vector<std::string> log;
+    int transactionTimeout = 1000;
+    int retryCount = 3;
+    int interCharTimeout = 100;
 };
 
 Config selectConfig();
