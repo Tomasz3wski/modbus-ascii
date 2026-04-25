@@ -12,6 +12,7 @@ public:
     Slave(SerialPort& port);
 
     void setOnTextReceived(std::function<void(const std::string&)> callback);
+    void setOnFrameReceived(std::function<void(const std::string&)> callback);
 
     ParsedFrame receiveRequest();
     void processRequest(const ParsedFrame& frame);
@@ -32,6 +33,7 @@ private:
     std::string storedText;
     std::atomic<bool> isRunning;
     std::function<void(const std::string&)> onTextReceived;
+    std::function<void(const std::string&)> onFrameReceived;
 
     enum class State { IDLE, RECEIVING };
 };

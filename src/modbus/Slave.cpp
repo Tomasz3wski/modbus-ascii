@@ -10,6 +10,10 @@ void Slave::setOnTextReceived(std::function<void(const std::string&)> callback){
     onTextReceived = callback;
 }
 
+void Slave::setOnFrameReceived(std::function<void(const std::string&)> callback){
+    onFrameReceived = callback;
+}
+
 ParsedFrame Slave::receiveRequest(){
     std::string rawResult = "";
     State state = State::IDLE;
@@ -33,6 +37,7 @@ ParsedFrame Slave::receiveRequest(){
             if (ch.back() == '\n') break;
         }
     }
+    if (onFrameReceived) onFrameReceived(rawResult);
     return parseFrame(rawResult);
 }
 

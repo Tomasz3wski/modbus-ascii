@@ -236,31 +236,42 @@ void runSlave(Slave& slave){
         printw("Invalid timeout, using default (100ms)\n");
         refresh();
     }
-
     noecho();
 
-    std::string receivedText = "";
-    std::mutex textMutex;
+std::string receivedText = "";
+    std::vector<std::string> hexLog;
+    std::mutex dataMutex;
 
     slave.setOnTextReceived([&](const std::string& text){
-        std::lock_guard<std::mutex> lock(textMutex);
+        std::lock_guard<std::mutex> lock(dataMutex);
         receivedText = text;
     });
 
-    std::thread slaveThread([&](){ slave.run(); });
+    slave.setOnFrameReceived([&](const std::string& frame){
+        std::lock_guard<std::mutex> lock(dataMutex);
+        hexLog.push_back("RX: " + toHexDump(frame));
+        if (hexLog.size() > 5) hexLog.erase(hexLog.begin());
+    });
 
+    std::thread slaveThread([&](){ slave.run(); });
     nodelay(stdscr, TRUE);
 
     while(true){
         clear();
         printw("=== SLAVE MODE ===\n\n");
-        printw("Address:  %02X\n", slave.getAddress());
-        printw("Status:   Waiting for request...\n\n");
-        printw("--- Received Text ---\n");
+        printw("Address:    %d\n", slave.getAddress());
+        printw("Inter-char: %d ms\n\n", slave.getInterCharTimeout());
+        printw("Status:     Waiting for request...\n\n");
 
+        printw("--- Received Text ---\n");
         {
-            std::lock_guard<std::mutex> lock(textMutex);
-            printw("%s\n", receivedText.c_str());
+            std::lock_guard<std::mutex> lock(dataMutex);
+            printw("%s\n\n", receivedText.c_str());
+
+            printw("--- Hex Log ---\n");
+            for (const auto& line : hexLog){
+                printw("%s\n", line.c_str());
+            }
         }
 
         printw("\n[q] Quit\n");
