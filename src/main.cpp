@@ -6,6 +6,7 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
+#include <iomanip>
 
 int main(){
     SerialPort masterPort;
@@ -19,23 +20,20 @@ int main(){
         return 1;
     }
 
+    Master master(masterPort);
     Slave slave(slavePort);
+    slave.setAddress(0x01);
 
-    std::thread sender([&](){
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
-        masterPort.write(":0101000AF4\r\n");
+    std::thread slaveThread([&](){
+        ParsedFrame req = slave.receiveRequest();
+        if (req.valid) slave.processRequest(req);
     });
 
-    std::cout << "Slave wait...\n";
-    ParsedFrame request = slave.receiveRequest();
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    std::vector<uint8_t> text = {'H', 'e', 'l', 'l', 'o'};
+    master.sendFrame(0x01, 0x01, text);
 
-    std::cout << "valid:    " << request.valid << '\n';
-    if (request.valid){
-        std::cout << "address:  " << std::hex << static_cast<int>(request.address) << '\n';
-        std::cout << "function: " << std::hex << static_cast<int>(request.function) << '\n';
-    }
-
-    sender.join();
+    slaveThread.join();
 
     return 0;
 }

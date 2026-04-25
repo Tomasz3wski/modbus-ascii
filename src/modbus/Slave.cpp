@@ -1,6 +1,8 @@
 #include "Slave.hpp"
 #include "../serial/SerialPort.hpp"
 
+#include <iostream>
+
 Slave::Slave(SerialPort& port) : mAddress(1), interCharTimeout(100), mPort(port) {}
 
 ParsedFrame Slave::receiveRequest(){
@@ -25,6 +27,25 @@ ParsedFrame Slave::receiveRequest(){
         }
     }
     return parseFrame(rawResult);
+}
+
+void Slave::processRequest(const ParsedFrame& frame){
+    if (frame.address != mAddress && frame.address != 0x00) return;
+
+    if (frame.function == 0x01){
+        storedText.assign(frame.data.begin(), frame.data.end());
+        std::cout << storedText << '\n';
+    }
+    else if (frame.function == 0x02){
+        if (frame.address == 0x00) return;
+
+        std::vector<uint8_t> responseData(storedText.begin(), storedText.end());
+        std::string response = buildFrame(mAddress, 0x02, responseData);
+        mPort.write(response);
+    }
+    else{
+        std::cerr << "Invalid function - " << frame.function << '\n';
+    }
 }
 
 void Slave::setAddress(uint8_t address){
