@@ -30,18 +30,17 @@ int main(){
 
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
-    std::vector<uint8_t> text1 = {'H', 'e', 'l', 'l', 'o'};
-    std::vector<uint8_t> text2 = {'W', 'o', 'r', 'l', 'd'};
-    std::vector<uint8_t> text3 = {'M', 'O', 'D', 'B', 'U', 'S'};
-
-    master.sendTransaction(0x01, 0x01, text1, false);
+    std::vector<uint8_t> text = {'H', 'e', 'l', 'l', 'o', ' ', 'M', 'O', 'D', 'B', 'U', 'S'};
+    master.sendTransaction(0x01, 0x01, text, false);
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
-    master.sendTransaction(0x00, 0x01, text2);
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    ParsedFrame response = master.sendTransaction(0x01, 0x02, {}, true);
 
-    master.sendTransaction(0x02, 0x01, text3, false);
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    std::cout << "valid: " << response.valid << '\n';
+    if (response.valid){
+        std::string received(response.data.begin(), response.data.end());
+        std::cout << "reveived: " << received << '\n';
+    }
 
     slave.stop();
     slaveThread.join();
