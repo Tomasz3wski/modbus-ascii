@@ -4,6 +4,7 @@
 #include "Frame.hpp"
 
 #include <string>
+#include <atomic>
 
 class Slave {
 public:
@@ -18,11 +19,15 @@ public:
     uint8_t getAddress() const;
     int getInterCharTimeout() const;
 
+    void run();
+    void stop();
+
 private:
     SerialPort& mPort;
     uint8_t mAddress;
     int interCharTimeout;
     std::string storedText;
+    std::atomic<bool> isRunning;
 
     enum class State { IDLE, RECEIVING };
 };

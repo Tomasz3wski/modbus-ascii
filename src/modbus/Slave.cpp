@@ -3,14 +3,16 @@
 
 #include <iostream>
 
-Slave::Slave(SerialPort& port) : mAddress(1), interCharTimeout(100), mPort(port) {}
+Slave::Slave(SerialPort& port) : mAddress(1), interCharTimeout(100), mPort(port), isRunning(false) {}
 
 ParsedFrame Slave::receiveRequest(){
     std::string rawResult = "";
     State state = State::IDLE;
 
     while(true){
-        int timeout = (state == State::IDLE) ? 100000 : interCharTimeout;
+        if (!isRunning) return ParsedFrame{0, 0, {}, false};
+
+        int timeout = (state == State::IDLE) ? 500 : interCharTimeout;
         std::string ch = mPort.read(1, timeout);
 
         if (state == State::IDLE){
@@ -67,3 +69,18 @@ uint8_t Slave::getAddress() const{
 int Slave::getInterCharTimeout() const{
     return interCharTimeout;
 }
+
+void Slave::run(){
+    isRunning = true;
+    while (isRunning){
+        ParsedFrame receivedFrame = receiveRequest();
+        if (!isRunning) break;
+        if (receivedFrame.valid) processRequest(receivedFrame);
+        else std::cerr << "Invalid frame\n";
+    }
+}
+
+void Slave::stop(){
+    isRunning = false;
+}
+
