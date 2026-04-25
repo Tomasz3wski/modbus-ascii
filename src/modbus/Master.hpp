@@ -11,7 +11,7 @@ public:
 
     bool sendFrame(uint8_t address, uint8_t function, const std::vector<uint8_t>& data);
     ParsedFrame receiveResponse();
-    ParsedFrame sendTransaction(uint8_t address, uint8_t function, const std::vector<uint8_t>& data);
+    ParsedFrame sendTransaction(uint8_t address, uint8_t function, const std::vector<uint8_t>& data, bool waitForResponse = true);
 
     void setTransactionTimeout(int ms); // 0 - 10000 ms, step 100ms
     void setRetryCount(int count); // 0 - 5

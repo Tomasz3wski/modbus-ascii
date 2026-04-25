@@ -34,19 +34,19 @@ ParsedFrame Master::receiveResponse(){
     return parseFrame(rawResult);
 }
 
-ParsedFrame Master::sendTransaction(uint8_t address, uint8_t function, const std::vector<uint8_t>& data){
+ParsedFrame Master::sendTransaction(uint8_t address, uint8_t function, const std::vector<uint8_t>& data, bool waitForResponse){
     ParsedFrame response;
     response.valid = false;
 
     for (int i = 0; i <= getRetryCount(); i++){
         sendFrame(address, function, data);
 
-        if (address == 0x00){
+        if (!waitForResponse || address == 0x00){
             response.valid = true;
             return response;
         }
-        response = receiveResponse();
 
+        response = receiveResponse();
         if (response.valid){
             return response;
         }

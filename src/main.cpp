@@ -34,13 +34,13 @@ int main(){
     std::vector<uint8_t> text2 = {'W', 'o', 'r', 'l', 'd'};
     std::vector<uint8_t> text3 = {'M', 'O', 'D', 'B', 'U', 'S'};
 
-    master.sendFrame(0x01, 0x01, text1);
+    master.sendTransaction(0x01, 0x01, text1, false);
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
-    master.sendFrame(0x01, 0x01, text2);
+    master.sendTransaction(0x00, 0x01, text2);
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
-    master.sendFrame(0x01, 0x01, text3);
+    master.sendTransaction(0x02, 0x01, text3, false);
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
     slave.stop();
