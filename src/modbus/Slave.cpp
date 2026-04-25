@@ -2,8 +2,13 @@
 #include "../serial/SerialPort.hpp"
 
 #include <iostream>
+#include <functional>
 
 Slave::Slave(SerialPort& port) : mAddress(1), interCharTimeout(100), mPort(port), isRunning(false) {}
+
+void Slave::setOnTextReceived(std::function<void(const std::string&)> callback){
+    onTextReceived = callback;
+}
 
 ParsedFrame Slave::receiveRequest(){
     std::string rawResult = "";
@@ -36,7 +41,7 @@ void Slave::processRequest(const ParsedFrame& frame){
 
     if (frame.function == 0x01){
         storedText.assign(frame.data.begin(), frame.data.end());
-        std::cout << storedText << '\n';
+        if (onTextReceived) onTextReceived(storedText);
     }
     else if (frame.function == 0x02){
         if (frame.address == 0x00) return;

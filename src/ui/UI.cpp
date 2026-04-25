@@ -1,12 +1,46 @@
 #include "UI.hpp"
 #include "../modbus/Master.hpp"
+#include "../modbus/Slave.hpp"
 
 #include <ncurses.h>
 #include <sstream>
 #include <iomanip>
+#include <thread>
+#include <mutex>
+#include <chrono>
+
+Config selectConfig(){
+    echo();
+    
+    printw("\n=== MODBUS ASCII Terminal ===\n\n");
+    
+    printw("Enter port (e.g. /dev/tty.usbserial-110): ");
+    refresh();
+    char portBuf[64];
+    getnstr(portBuf, 63);
+    
+    printw("Enter baud rate (9600/19200/38400/115200): ");
+    refresh();
+    char baudBuf[8];
+    getnstr(baudBuf, 7);
+    
+    int baud = 9600;
+    try {
+        baud = std::stoi(baudBuf);
+    } catch (...) {
+        printw("Invalid baud rate, using 9600\n");
+        refresh();
+    }
+    
+    noecho();
+    
+    Config config;
+    config.port = std::string(portBuf);
+    config.baudRate = baud;
+    return config;
+}
 
 Mode selectMode(){
-    initscr();
     cbreak();
     noecho();
 
@@ -77,7 +111,7 @@ void runMaster(Master& master){
             char buf[4];
             getnstr(buf, 3);
             noecho();
-            
+
             try {
                 state.address = static_cast<uint8_t>(std::stoi(buf, nullptr, 16));
             } catch (...) {
@@ -122,5 +156,62 @@ void runMaster(Master& master){
         }
     }
 
+    endwin();
+}
+
+// slave
+
+void runSlave(Slave& slave){
+    echo();
+    printw("\n=== SLAVE CONFIGURATION ===\n\n");
+    
+    printw("Enter address (1-247): ");
+    refresh();
+    char addrBuf[4];
+    getnstr(addrBuf, 3);
+    try {
+        slave.setAddress(static_cast<uint8_t>(std::stoi(addrBuf)));
+    } catch (...) {
+        printw("Invalid address, using default (1)\n");
+    }
+    noecho();
+
+    std::string receivedText = "";
+    std::mutex textMutex;
+
+    slave.setOnTextReceived([&](const std::string& text){
+        std::lock_guard<std::mutex> lock(textMutex);
+        receivedText = text;
+    });
+
+    std::thread slaveThread([&](){ slave.run(); });
+
+    nodelay(stdscr, TRUE);
+
+    while(true){
+        clear();
+        printw("=== SLAVE MODE ===\n\n");
+        printw("Address:  %02X\n", slave.getAddress());
+        printw("Status:   Waiting for request...\n\n");
+        printw("--- Received Text ---\n");
+
+        {
+            std::lock_guard<std::mutex> lock(textMutex);
+            printw("%s\n", receivedText.c_str());
+        }
+
+        printw("\n[q] Quit\n");
+        refresh();
+
+        int ch = getch();
+        if (ch == 'q'){
+            slave.stop();
+            break;
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    }
+
+    slaveThread.join();
     endwin();
 }

@@ -5,10 +5,13 @@
 
 #include <string>
 #include <atomic>
+#include <functional>
 
 class Slave {
 public:
     Slave(SerialPort& port);
+
+    void setOnTextReceived(std::function<void(const std::string&)> callback);
 
     ParsedFrame receiveRequest();
     void processRequest(const ParsedFrame& frame);
@@ -28,6 +31,7 @@ private:
     int interCharTimeout;
     std::string storedText;
     std::atomic<bool> isRunning;
+    std::function<void(const std::string&)> onTextReceived;
 
     enum class State { IDLE, RECEIVING };
 };
