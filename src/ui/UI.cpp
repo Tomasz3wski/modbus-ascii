@@ -205,7 +205,7 @@ void runMaster(Master& master){
             }
         }
     }
-    
+
     endwin();
 }
 
@@ -214,7 +214,7 @@ void runMaster(Master& master){
 void runSlave(Slave& slave){
     echo();
     printw("\n=== SLAVE CONFIGURATION ===\n\n");
-    
+
     printw("Enter address (1-247): ");
     refresh();
     char addrBuf[4];
@@ -223,7 +223,20 @@ void runSlave(Slave& slave){
         slave.setAddress(static_cast<uint8_t>(std::stoi(addrBuf)));
     } catch (...) {
         printw("Invalid address, using default (1)\n");
+        refresh();
     }
+
+    printw("Enter inter-char timeout (0-1000 ms): ");
+    refresh();
+    char interBuf[8];
+    getnstr(interBuf, 7);
+    try {
+        slave.setInterCharTimeout(std::stoi(interBuf));
+    } catch (...) {
+        printw("Invalid timeout, using default (100ms)\n");
+        refresh();
+    }
+
     noecho();
 
     std::string receivedText = "";
